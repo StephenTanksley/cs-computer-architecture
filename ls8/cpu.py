@@ -9,6 +9,12 @@ class CPU:
     def __init__(self):
         """Construct a new CPU."""
 
+        # This is the program counter. We use this to keep track of where we are in our execution order.
+        pc = 0
+
+        # RAM will be used to store a list of programs.
+        self.ram = []
+
         # general purpose registers for storing information we're working with.
         self.R0 = [0] * 8
         self.R1 = [0] * 8
@@ -24,7 +30,8 @@ class CPU:
 
         # Reserved as stack pointer (SP)
         self.R7 = [0] * 8
-        
+
+    """Load will parse through a program that we've written and will add those instructions line by line in to the RAM at an address indicated by our address variable."""
 
     def load(self):
         """Load a program into memory."""
