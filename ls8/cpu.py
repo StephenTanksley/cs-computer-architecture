@@ -9,27 +9,26 @@ class CPU:
     def __init__(self):
         """Construct a new CPU."""
 
+        # We set up a binary
+        self.running = False
+
         # This is the program counter. We use this to keep track of where we are in our execution order.
-        pc = 0
+        self.pc = 0
 
         # RAM will be used to store a list of programs.
         self.ram = []
 
         # general purpose registers for storing information we're working with.
-        self.R0 = [0] * 8
-        self.R1 = [0] * 8
-        self.R2 = [0] * 8
-        self.R3 = [0] * 8
-        self.R4 = [0] * 8
+        self.reg = [0] * 8
 
-        # Reserved as the interrupt mask (IM)
-        self.R5 = [0] * 8
+        # # Reserved as the interrupt mask (IM)
+        # self.reg[5]
 
-        # Reserved as interrupt status (IS)
-        self.R6 = [0] * 8
+        # # Reserved as interrupt status (IS)
+        # self.reg[6]
 
-        # Reserved as stack pointer (SP)
-        self.R7 = [0] * 8
+        # # Reserved as stack pointer (SP)
+        # self.reg[7]
 
     """Load will parse through a program that we've written and will add those instructions line by line in to the RAM at an address indicated by our address variable."""
 
@@ -54,12 +53,23 @@ class CPU:
             self.ram[address] = instruction
             address += 1
 
+    """The arithmetic logic unit will perform mathematic operations on the registers. Should implement addition, subtraction, multiplication, division."""
+
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
 
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
-        # elif op == "SUB": etc
+
+        elif op == "SUB":
+            self.reg[reg_a] -= self.reg[reg_b]
+
+        elif op == "MULT":
+            self.reg[reg_a] *= self.reg[reg_b]
+
+        elif op == "DIV":
+            self.reg[reg_a] //= self.reg[reg_b]
+
         else:
             raise Exception("Unsupported ALU operation")
 
