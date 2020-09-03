@@ -2,6 +2,12 @@
 
 import sys
 
+instructions = {
+    "HLT": 0b00000001,
+    "LDI": 0b10000010,
+    "PRN": 0b01000111,
+}
+
 
 class CPU:
     """Main CPU class."""
@@ -11,15 +17,6 @@ class CPU:
 
         # general purpose registers: They store information we're currently working with.
         self.reg = [0] * 8
-
-        # IR - Instruction Register: Holds a copy of the currently executing instruction.
-        self.ir = None
-
-        # MAR - Memory Address Register: Holds the memory address we're reading or writing.
-        self.mar = None
-
-        # MDR - Memory Data Register: Holds the value to write or the value just read.
-        self.mdr = None
 
         # This is the program counter. We use this to keep track of where we are in our execution order.
         self.pc = 0
@@ -86,12 +83,13 @@ class CPU:
 
     # To read from our ram, we'll need to know where to look first.
 
-    def ram_read(self, address):
-        return self.ram[address]
+    def ram_read(self, mar):
+        # The mar holds the memory address we're reading from or writing to.
+        return self.ram[mar]
 
-    def ram_write(self, address, instruction):
-        self.ram[address] = instruction
-        print(f'{self.ram[address]} : {instruction}')
+    def ram_write(self, mar, mdr):
+        # write the data (mdr) to the address (mar) in ram.
+        self.ram[mar] = mdr
 
     def trace(self):
         """
@@ -118,8 +116,23 @@ class CPU:
         running = True
 
         while running:
-            instruction = self.ram[self.pc]
+            # This instruction register is where the actual instruction is located. When we do operations, we're essentially skipping from instruction register to instruction register.
+            instruction_register = self.ram_read(self.pc)
+            operand_a = self.ram[self.pc+1]
+            operand_b = self.ram[self.pc+2]
 
-        # running = False
-        """Run the CPU."""
-        pass
+            if instruction_register == instructions["LDI"]:
+                self.reg[operand_a] = operand_b
+                self.pc += 3
+
+            elif instruction_register == instructions["PRN"]:
+                print(self.reg[operand_a])
+                self.pc += 2
+
+            elif instruction_register == instructions["HLT"]:
+                running = False
+                self.pc += 1
+
+            else:
+                raise Exception(
+                    f"Unsupported instruction: {instruction_register}")
