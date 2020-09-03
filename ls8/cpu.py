@@ -16,10 +16,10 @@ class CPU:
         self.ir = None
 
         # MAR - Memory Address Register: Holds the memory address we're reading or writing.
-
         self.mar = None
 
         # MDR - Memory Data Register: Holds the value to write or the value just read.
+        self.mdr = None
 
         # This is the program counter. We use this to keep track of where we are in our execution order.
         self.pc = 0
