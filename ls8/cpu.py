@@ -9,17 +9,23 @@ class CPU:
     def __init__(self):
         """Construct a new CPU."""
 
-        # We set up a binary
-        self.running = False
+        # general purpose registers: They store information we're currently working with.
+        self.reg = [0] * 8
+
+        # IR - Instruction Register: Holds a copy of the currently executing instruction.
+        self.ir = None
+
+        # MAR - Memory Address Register: Holds the memory address we're reading or writing.
+
+        self.mar = None
+
+        # MDR - Memory Data Register: Holds the value to write or the value just read.
 
         # This is the program counter. We use this to keep track of where we are in our execution order.
         self.pc = 0
 
         # RAM will be used to store a list of programs.
-        self.ram = []
-
-        # general purpose registers for storing information we're working with.
-        self.reg = [0] * 8
+        self.ram = [0] * 256
 
         # # Reserved as the interrupt mask (IM)
         # self.reg[5]
@@ -41,11 +47,16 @@ class CPU:
 
         program = [
             # From print8.ls8
+            # This top instruction tells our CPU to do an operation (loading data). It then gives it the register to load that information into (R0). It then provides the information to load (the number 8).
             0b10000010,  # LDI R0,8
             0b00000000,
             0b00001000,
+
+            # This next instruction will print whatever is located at the next provided register number (in this case reg[0]).
             0b01000111,  # PRN R0
             0b00000000,
+
+            # At this point, we should have the number 8 printed to the screen. Once we advance the pc, we'll hit the HLT OP Code and terminate the program.
             0b00000001,  # HLT
         ]
 
@@ -73,6 +84,15 @@ class CPU:
         else:
             raise Exception("Unsupported ALU operation")
 
+    # To read from our ram, we'll need to know where to look first.
+
+    def ram_read(self, address):
+        return self.ram[address]
+
+    def ram_write(self, address, instruction):
+        self.ram[address] = instruction
+        print(f'{self.ram[address]} : {instruction}')
+
     def trace(self):
         """
         Handy function to print out the CPU state. You might want to call this
@@ -94,5 +114,12 @@ class CPU:
         print()
 
     def run(self):
+
+        running = True
+
+        while running:
+            instruction = self.ram[self.pc]
+
+        # running = False
         """Run the CPU."""
         pass
