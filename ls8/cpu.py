@@ -1,5 +1,5 @@
 """CPU functionality."""
-
+import os
 import sys
 
 instructions = {
@@ -10,6 +10,7 @@ instructions = {
 
 
 class CPU:
+
     """Main CPU class."""
 
     def __init__(self):
@@ -40,26 +41,46 @@ class CPU:
 
         address = 0
 
+        try:
+            if len(sys.argv) != 2:
+                print("Usage: cpu.py filename")
+                sys.exit(1)
+
+            filename = sys.argv[1]
+
+            with open(f'{filename}.ls8', 'r') as file:
+                program = []
+
+                for i in file:
+                    if i[0] != "#" and i[0] != "\n":
+                        # When we cast to int, we can specify a number base.
+                        i = int(i[:8], 2)
+                        program.append(i)
+                print(program)
+
+            for instruction in program:
+                self.ram[address] = instruction
+                address += 1
+
+        except FileNotFoundError:
+            print(f"{sys.argv[1]} file not found!")
+            sys.exit(2)
         # For now, we've just hardcoded a program:
 
-        program = [
-            # From print8.ls8
-            # This top instruction tells our CPU to do an operation (loading data). It then gives it the register to load that information into (R0). It then provides the information to load (the number 8).
-            0b10000010,  # LDI R0,8
-            0b00000000,
-            0b00001000,
+        # program = [
+        #     # From print8.ls8
+        #     # This top instruction tells our CPU to do an operation (loading data). It then gives it the register to load that information into (R0). It then provides the information to load (the number 8).
+        #     0b10000010,  # LDI R0,8
+        #     0b00000000,
+        #     0b00001000,
 
-            # This next instruction will print whatever is located at the next provided register number (in this case reg[0]).
-            0b01000111,  # PRN R0
-            0b00000000,
+        #     # This next instruction will print whatever is located at the next provided register number (in this case reg[0]).
+        #     0b01000111,  # PRN R0
+        #     0b00000000,
 
-            # At this point, we should have the number 8 printed to the screen. Once we advance the pc, we'll hit the HLT OP Code and terminate the program.
-            0b00000001,  # HLT
-        ]
-
-        for instruction in program:
-            self.ram[address] = instruction
-            address += 1
+        #     # At this point, we should have the number 8 printed to the screen. Once we advance the pc, we'll hit the HLT OP Code and terminate the program.
+        #     0b00000001,  # HLT
+        # ]
 
     """The arithmetic logic unit will perform mathematic operations on the registers. Should implement addition, subtraction, multiplication, division."""
 
@@ -114,6 +135,7 @@ class CPU:
     def run(self):
 
         running = True
+        self.pc = 0
 
         while running:
             # This instruction register is where the actual instruction is located. When we do operations, we're essentially skipping from instruction register to instruction register.
