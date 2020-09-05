@@ -8,6 +8,13 @@ instructions = {
     "PRN": 0b01000111,
 }
 
+math = {
+    "ADD": 0b10100000,
+    "SUB": 0b10100001,
+    "MUL": 0b10100010,
+    "DIV": 0b10100011,
+}
+
 
 class CPU:
 
@@ -53,7 +60,7 @@ class CPU:
 
                 for i in file:
                     if i[0] != "#" and i[0] != "\n":
-                        # When we cast to int, we can specify a number base.
+                        # When we cast to int, we can specify a number base. In this case, we're specifying binary.
                         i = int(i[:8], 2)
                         program.append(i)
                 print(program)
@@ -65,39 +72,28 @@ class CPU:
         except FileNotFoundError:
             print(f"{sys.argv[1]} file not found!")
             sys.exit(2)
-        # For now, we've just hardcoded a program:
-
-        # program = [
-        #     # From print8.ls8
-        #     # This top instruction tells our CPU to do an operation (loading data). It then gives it the register to load that information into (R0). It then provides the information to load (the number 8).
-        #     0b10000010,  # LDI R0,8
-        #     0b00000000,
-        #     0b00001000,
-
-        #     # This next instruction will print whatever is located at the next provided register number (in this case reg[0]).
-        #     0b01000111,  # PRN R0
-        #     0b00000000,
-
-        #     # At this point, we should have the number 8 printed to the screen. Once we advance the pc, we'll hit the HLT OP Code and terminate the program.
-        #     0b00000001,  # HLT
-        # ]
-
-    """The arithmetic logic unit will perform mathematic operations on the registers. Should implement addition, subtraction, multiplication, division."""
 
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
 
-        if op == "ADD":
+        if op == math["ADD"]:
             self.reg[reg_a] += self.reg[reg_b]
+            self.pc += 3
 
-        elif op == "SUB":
+        elif op == math["SUB"]:
             self.reg[reg_a] -= self.reg[reg_b]
+            self.pc += 3
 
-        elif op == "MULT":
+        elif op == math["MUL"]:
             self.reg[reg_a] *= self.reg[reg_b]
+            print("Here's register a: ", self.reg[reg_a])
+            print("Here's register b: ", self.reg[reg_b])
+            self.pc += 3
 
-        elif op == "DIV":
-            self.reg[reg_a] //= self.reg[reg_b]
+        elif op == math["DIV"]:
+            if (self.reg[reg_a] != 0):
+                self.reg[reg_a] //= self.reg[reg_b]
+                self.pc += 3
 
         else:
             raise Exception("Unsupported ALU operation")
@@ -133,7 +129,7 @@ class CPU:
         print()
 
     def run(self):
-
+        # self.trace()
         running = True
         self.pc = 0
 
@@ -143,18 +139,25 @@ class CPU:
             operand_a = self.ram[self.pc+1]
             operand_b = self.ram[self.pc+2]
 
-            if instruction_register == instructions["LDI"]:
-                self.reg[operand_a] = operand_b
-                self.pc += 3
+            # print("This is the instruction register: ", instruction_register)
+            # print(type(instruction_register))
 
-            elif instruction_register == instructions["PRN"]:
-                print(self.reg[operand_a])
-                self.pc += 2
-
-            elif instruction_register == instructions["HLT"]:
-                running = False
-                self.pc += 1
+            if instruction_register in math.values():
+                self.alu(instruction_register, operand_a, operand_b)
 
             else:
-                raise Exception(
-                    f"Unsupported instruction: {instruction_register}")
+                if instruction_register == instructions["LDI"]:
+                    self.reg[operand_a] = operand_b
+                    self.pc += 3
+
+                elif instruction_register == instructions["PRN"]:
+                    print(self.reg[operand_a])
+                    self.pc += 2
+
+                elif instruction_register == instructions["HLT"]:
+                    running = False
+                    self.pc += 1
+
+                else:
+                    raise Exception(
+                        f"Unsupported instruction: {instruction_register}")
