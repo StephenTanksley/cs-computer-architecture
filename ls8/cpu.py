@@ -13,6 +13,9 @@ math = {
     "SUB": 0b10100001,
     "MUL": 0b10100010,
     "DIV": 0b10100011,
+    "DEC": 0b01100110,
+    "PUSH": 0b01000101,
+    "POP": 0b01000110,
 }
 
 
@@ -85,9 +88,10 @@ class CPU:
             self.pc += 3
 
         elif op == math["MUL"]:
-            self.reg[reg_a] *= self.reg[reg_b]
             print("Here's register a: ", self.reg[reg_a])
             print("Here's register b: ", self.reg[reg_b])
+            self.reg[reg_a] *= self.reg[reg_b]
+            print("Here's the product of a * b: ", self.reg[reg_a])
             self.pc += 3
 
         elif op == math["DIV"]:
@@ -133,6 +137,9 @@ class CPU:
         running = True
         self.pc = 0
 
+        # Determine # of operands based on the first two digits of OP Code.
+        # Number should be 1 plus the number of operands.
+
         while running:
             # This instruction register is where the actual instruction is located. When we do operations, we're essentially skipping from instruction register to instruction register.
             instruction_register = self.ram_read(self.pc)
@@ -158,6 +165,8 @@ class CPU:
                     running = False
                     self.pc += 1
 
+                elif instruction_register == instructions["PUSH"]:
+                    operand_a = self.ram[self.pc + 1]
                 else:
                     raise Exception(
                         f"Unsupported instruction: {instruction_register}")
