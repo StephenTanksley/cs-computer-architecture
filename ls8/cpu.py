@@ -2,35 +2,33 @@
 import os
 import sys
 
-instructions = {
-    "HLT":  0b00000001,
-    "IRET": 0b00010011,  # Needs implementation
-    "JMP":  0b01010100,  # Needs implementation
-    "JNE":  0b01010110,  # Needs implementation
-    "LDI":  0b10000010,
-    "POP":  0b01000110,  # Needs implementation
-    "PRA":  0b01001000,  # Needs implementation
-    "PRN":  0b01000111,
-    "PUSH": 0b01000101,  # Needs implementation
-    "ST":   0b10000100,  # Needs implementation
-}
+# Run method operations. Third bit from the left is a 0, so this is handled by the main run method.
+HLT = 0b00000001
+IRET = 0b00010011   # Needs implementation
+JMP = 0b01010100   # Needs implementation
+JNE = 0b01010110   # Needs implementation
+LDI = 0b10000010
+POP = 0b01000110   # Needs implementation
+PRA = 0b01001000   # Needs implementation
+PRN = 0b01000111
+PUSH = 0b01000101   # Needs implementation
+ST = 0b10000100   # Needs implementation
 
-# Third bit from the left indicates an ALU operation. We can determine if
-math = {
-    "ADD":  0b10100000,
-    "AND":  0b10101000,
-    "CMP":  0b10100111,  # Needs implementation
-    "DEC":  0b01100110,
-    "DIV":  0b10100011,
-    "INC":  0b01100101,
-    "MOD":  0b10100100,
-    "MUL":  0b10100010,
-    "NOT":  0b01101001,
-    "SHL":  0b10101100,
-    "SHR":  0b10101101,
-    "SUB":  0b10100001,
-    "XOR":  0b10101011,  # Needs implementation
-}
+
+# ALU operations. If the third bit from the left is a 1, we know we have an ALU operation.
+ADD = 0b10100000
+AND = 0b10101000
+CMP = 0b10100111   # Needs implementation
+DEC = 0b01100110
+DIV = 0b10100011
+INC = 0b01100101
+MOD = 0b10100100
+MUL = 0b10100010
+NOT = 0b01101001
+SHL = 0b10101100
+SHR = 0b10101101
+SUB = 0b10100001
+XOR = 0b10101011
 
 
 class CPU:
@@ -65,7 +63,16 @@ class CPU:
         self.running = False
 
         self.branch_table = {
-            "HLT": self.halt
+            HLT:  self.halt_op,
+            # "IRET": self.interrupt_return_op,  # Needs implementation
+            # "JMP":  self.jump_op,  # Needs implementation
+            # "JNE":  self.jne_op,  # Needs implementation
+            LDI:  self.ldi_op,
+            # "POP":  self.pop_op,  # Needs implementation
+            # "PRA":  self.pra_op,  # Needs implementation
+            PRN:  self.print_op,
+            # "PUSH": self.push_op,  # Needs implementation
+            # "ST":   self.store_op,  # Needs implementation
         }
 
     """Load will parse through a program that we've written and will add those instructions line by line in to the RAM at an address indicated by our address variable."""
@@ -102,16 +109,16 @@ class CPU:
 
     def alu(self, op, reg_a, reg_b):
 
-        if op == math["ADD"]:
+        if op == ADD:
             self.reg[reg_a] += self.reg[reg_b]
 
-        elif op == math["AND"]:
+        elif op == AND:
             self.reg[reg_a] &= self.reg[reg_b]
 
-        elif op == math["DEC"]:
+        elif op == DEC:
             self.reg[reg_a] -= 1
 
-        elif op == math["DIV"]:
+        elif op == DIV:
             if reg_b == 0:
                 print("Cannot divide by zero!")
                 self.running = False
@@ -120,28 +127,28 @@ class CPU:
             else:
                 self.reg[reg_a] /= self.reg[reg_b]
 
-        elif op == math["INC"]:
+        elif op == INC:
             self.reg[reg_a] += 1
 
-        elif op == math["MOD"]:
+        elif op == MOD:
             self.reg[reg_a] %= self.reg[reg_b]
 
-        elif op == math["MUL"]:
+        elif op == MUL:
             self.reg[reg_a] *= self.reg[reg_b]
 
-        elif op == math["NOT"]:
+        elif op == NOT:
             self.reg[reg_a] != self.reg[reg_b]
 
-        elif op == math["SHL"]:
+        elif op == SHL:
             self.reg[reg_a] <<= self.reg[reg_b]
 
-        elif op == math["SHR"]:
+        elif op == SHL:
             self.reg[reg_a] >>= self.reg[reg_b]
 
-        elif op == math["SUB"]:
+        elif op == SUB:
             self.reg[reg_a] -= self.reg[reg_b]
 
-        elif op == math["XOR"]:
+        elif op == XOR:
             self.reg[reg_a] ^= self.reg[reg_b]
 
         else:
@@ -180,84 +187,57 @@ class CPU:
 
     # Operation methods - Basically the op code will look up a value from the branch table and will be returned a function.
 
-    def halt(self, operand_a, operand_b):
+    def halt_op(self, operand_a, operand_b):
         # Exits execution immediately.
         self.running = False
 
-    def print(self, operand_a, operand_b):
+    def print_op(self, operand_a, operand_b):
         print(self.reg[operand_a])
 
-    def load_data(self, operand_a, operand_b):
+    def ldi_op(self, operand_a, operand_b):
         self.reg[operand_a] = operand_b
+
+    def push_op(self, operand_a, operand_b):
+        self.reg[self.stack_pointer] -= 1
+        self.ram_write(self.reg[operand_a], self.stack_pointer)
+
+    def pop_op(self, operand_a, operand_b):
+        item = self.ram_read(self.stack_pointer)
+        self.reg[operand_a] = item
+        self.reg[self.stack_pointer] += 1
 
     # Here's the run function which basically powers the whole shebang. The Run method is the master controller. It decides what needs to happen and in which method.
 
     def run(self):
-        # self.trace()
         self.running = True
         self.pc = 0
 
-        # Determine # of operands based on the first two digits of OP Code.
-        # Number should be 1 plus the number of operands.
-
         while self.running == True:
 
-            # This instruction register is where the actual instruction is located. When we do operations, we're essentially skipping from instruction register to instruction register.
             instruction_register = self.ram_read(self.pc)
-            operand_a = self.ram[self.pc+1]
-            operand_b = self.ram[self.pc+2]
+            operand_a = self.ram_read(self.pc + 1)
+            operand_b = self.ram_read(self.pc + 2)
 
             # I can determine if my operation is something for the ALU by masking it.
             arithmetic_operation = (instruction_register >> 5) & 0b00000001
 
             # Basically I want it separated into two areas. If there's an arithmetic function, the ALU handles it.
-            if arithmetic_operation:
+            if arithmetic_operation == 1:
                 self.alu(instruction_register, operand_a, operand_b)
 
             # If it isn't an arithmetic operation, I want the run function to handle it.
+
+            elif instruction_register in self.branch_table:
+                self.branch_table[instruction_register](
+                    operand_a, operand_b)
+
             else:
+                raise Exception(
+                    f"Unsupported instruction: {instruction_register}")
 
-                # I can just define the functions themselves and then pass along a reference to the function from the branch table.
-                if instruction_register in self.branch_table:
-                    self.branch_table[instruction_register](
-                        operand_a, operand_b)
+            # If a program sets the program counter, we want to have a mask set up for that.
+            increment_pc = (instruction_register >> 4) & 0b00000001
 
-                # # All of these operations need to be moved to the branch table.
-                # if instruction_register == instructions["LDI"]:
-                #     self.reg[operand_a] = operand_b
-                #     self.pc += 3
-
-                # elif instruction_register == instructions["PRN"]:
-                #     print(self.reg[operand_a])
-                #     self.pc += 2
-
-                # elif instruction_register == instructions["HLT"]:
-                #     self.running = False
-                #     self.pc += 1
-
-                elif instruction_register == instructions["PUSH"]:
-                    # If we're storing an item in the stack, we want to decrease the stack pointer because we're moving DOWN in memory towards the bottom.
-                    # This is the stack pointer.
-                    self.reg[self.stack_pointer] -= 1
-                    self.ram_write(self.reg[operand_a], self.stack_pointer)
-
-                elif instruction_register == instructions["POP"]:
-                    # If we're removing an item FROM the stack, we want to INCREASE the stack pointer because we are moving UP towards the top of memory again.
-
-                    # We're retrieving an item from the stack and putting it into a register.
-
-                    # This is the stack pointer.
-                    item = self.ram_read(self.stack_pointer)
-                    self.reg[operand_a] = item
-                    self.reg[self.stack_pointer] += 1
-
-                else:
-                    raise Exception(
-                        f"Unsupported instruction: {instruction_register}")
-
-                # If a program sets the program counter, we want to have a mask set up for that.
-                set_pc = (instruction_register >> 4) & 0b00000001
-
-                if set_pc == 0:
-                    num_args = instruction_register >> 6
-                    self.pc += num_args + 1
+            if increment_pc == 0:
+                num_args = instruction_register >> 6
+                self.pc += (num_args + 1)
