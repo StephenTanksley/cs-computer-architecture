@@ -57,6 +57,9 @@ class CPU:
         # self.reg[stack_pointer]
         self.stack_pointer = 7
 
+        # This sets the register at self.reg[7] to 243. We can now say self.reg[]
+        self.reg[self.stack_pointer] = 243
+
         self.running = False
 
     """Load will parse through a program that we've written and will add those instructions line by line in to the RAM at an address indicated by our address variable."""
@@ -121,6 +124,7 @@ class CPU:
 
     def ram_read(self, mar):
         # The mar holds the memory address we're reading from or writing to.
+        print(self.ram[mar])
         return self.ram[mar]
 
     def ram_write(self, mar, mdr):
@@ -181,8 +185,8 @@ class CPU:
                 elif instruction_register == instructions["PUSH"]:
                     # If we're storing an item in the stack, we want to decrease the stack pointer because we're moving DOWN in memory towards the bottom.
                     # This is the stack pointer.
+                    self.reg[self.stack_pointer] -= 1
                     self.ram_write(self.reg[operand_a], self.stack_pointer)
-                    self.stack_pointer -= 1
 
                 elif instruction_register == instructions["POP"]:
                     # If we're removing an item FROM the stack, we want to INCREASE the stack pointer because we are moving UP towards the top of memory again.
@@ -192,7 +196,7 @@ class CPU:
                     # This is the stack pointer.
                     item = self.ram_read(self.stack_pointer)
                     self.reg[operand_a] = item
-                    self.stack_pointer += 1
+                    self.reg[self.stack_pointer] += 1
 
                 else:
                     raise Exception(
