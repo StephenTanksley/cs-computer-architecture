@@ -4,28 +4,30 @@ import sys
 
 instructions = {
     "HLT":  0b00000001,
-    "LDI":  0b10000010,
-    "PRN":  0b01000111,
-    "PUSH": 0b01000101,  # Needs implementation
-    "POP":  0b01000110,  # Needs implementation
+    "IRET": 0b00010011,  # Needs implementation
     "JMP":  0b01010100,  # Needs implementation
     "JNE":  0b01010110,  # Needs implementation
-    "ST":   0b10000100,  # Needs implementation
+    "LDI":  0b10000010,
+    "POP":  0b01000110,  # Needs implementation
     "PRA":  0b01001000,  # Needs implementation
-    "IRET": 0b00010011,  # Needs implementation
+    "PRN":  0b01000111,
+    "PUSH": 0b01000101,  # Needs implementation
+    "ST":   0b10000100,  # Needs implementation
 }
 
+# Third bit from the left indicates an ALU operation. We can determine if
 math = {
     "ADD":  0b10100000,
-    "AND":  0b10101000,  # Needs implementation
+    "AND":  0b10101000,
     "CMP":  0b10100111,  # Needs implementation
-    "DEC":  0b01100110,  # Needs implementation
+    "DEC":  0b01100110,
     "DIV":  0b10100011,
-    "INC":  0b01100101,  # Needs implementation
-    "MOD":  0b10100100,  # Needs implementation
+    "INC":  0b01100101,
+    "MOD":  0b10100100,
     "MUL":  0b10100010,
-    "SHL":  0b10101100,  # Needs implementation
-    "SHR":  0b10101101,  # Needs implementation
+    "NOT":  0b01101001,
+    "SHL":  0b10101100,
+    "SHR":  0b10101101,
     "SUB":  0b10100001,
     "XOR":  0b10101011,  # Needs implementation
 }
@@ -62,6 +64,10 @@ class CPU:
 
         self.running = False
 
+        self.branch_table = {
+            "HLT": self.halt
+        }
+
     """Load will parse through a program that we've written and will add those instructions line by line in to the RAM at an address indicated by our address variable."""
 
     def load(self):
@@ -95,27 +101,48 @@ class CPU:
             sys.exit(2)
 
     def alu(self, op, reg_a, reg_b):
-        """ALU operations."""
 
         if op == math["ADD"]:
             self.reg[reg_a] += self.reg[reg_b]
-            self.pc += 3
 
-        elif op == math["SUB"]:
-            self.reg[reg_a] -= self.reg[reg_b]
-            self.pc += 3
+        elif op == math["AND"]:
+            self.reg[reg_a] &= self.reg[reg_b]
+
+        elif op == math["DEC"]:
+            self.reg[reg_a] -= 1
+
+        elif op == math["DIV"]:
+            if reg_b == 0:
+                print("Cannot divide by zero!")
+                self.running = False
+                sys.exit(1)
+
+            else:
+                self.reg[reg_a] /= self.reg[reg_b]
+
+        elif op == math["INC"]:
+            self.reg[reg_a] += 1
+
+        elif op == math["MOD"]:
+            self.reg[reg_a] %= self.reg[reg_b]
 
         elif op == math["MUL"]:
             self.reg[reg_a] *= self.reg[reg_b]
-            self.pc += 3
 
-        elif op == math["DIV"]:
-            if (self.reg[reg_b] == 0):
-                print("Cannot divide by zero!")
-                self.running = False
-            else:
-                self.reg[reg_a] //= self.reg[reg_b]
-                self.pc += 3
+        elif op == math["NOT"]:
+            self.reg[reg_a] != self.reg[reg_b]
+
+        elif op == math["SHL"]:
+            self.reg[reg_a] <<= self.reg[reg_b]
+
+        elif op == math["SHR"]:
+            self.reg[reg_a] >>= self.reg[reg_b]
+
+        elif op == math["SUB"]:
+            self.reg[reg_a] -= self.reg[reg_b]
+
+        elif op == math["XOR"]:
+            self.reg[reg_a] ^= self.reg[reg_b]
 
         else:
             raise Exception("Unsupported ALU operation")
@@ -151,6 +178,20 @@ class CPU:
 
         print()
 
+    # Operation methods - Basically the op code will look up a value from the branch table and will be returned a function.
+
+    def halt(self, operand_a, operand_b):
+        # Exits execution immediately.
+        self.running = False
+
+    def print(self, operand_a, operand_b):
+        print(self.reg[operand_a])
+
+    def load_data(self, operand_a, operand_b):
+        self.reg[operand_a] = operand_b
+
+    # Here's the run function which basically powers the whole shebang. The Run method is the master controller. It decides what needs to happen and in which method.
+
     def run(self):
         # self.trace()
         self.running = True
@@ -166,21 +207,33 @@ class CPU:
             operand_a = self.ram[self.pc+1]
             operand_b = self.ram[self.pc+2]
 
-            if instruction_register in math.values():
+            # I can determine if my operation is something for the ALU by masking it.
+            arithmetic_operation = (instruction_register >> 5) & 0b00000001
+
+            # Basically I want it separated into two areas. If there's an arithmetic function, the ALU handles it.
+            if arithmetic_operation:
                 self.alu(instruction_register, operand_a, operand_b)
 
+            # If it isn't an arithmetic operation, I want the run function to handle it.
             else:
-                if instruction_register == instructions["LDI"]:
-                    self.reg[operand_a] = operand_b
-                    self.pc += 3
 
-                elif instruction_register == instructions["PRN"]:
-                    print(self.reg[operand_a])
-                    self.pc += 2
+                # I can just define the functions themselves and then pass along a reference to the function from the branch table.
+                if instruction_register in self.branch_table:
+                    self.branch_table[instruction_register](
+                        operand_a, operand_b)
 
-                elif instruction_register == instructions["HLT"]:
-                    self.running = False
-                    self.pc += 1
+                # # All of these operations need to be moved to the branch table.
+                # if instruction_register == instructions["LDI"]:
+                #     self.reg[operand_a] = operand_b
+                #     self.pc += 3
+
+                # elif instruction_register == instructions["PRN"]:
+                #     print(self.reg[operand_a])
+                #     self.pc += 2
+
+                # elif instruction_register == instructions["HLT"]:
+                #     self.running = False
+                #     self.pc += 1
 
                 elif instruction_register == instructions["PUSH"]:
                     # If we're storing an item in the stack, we want to decrease the stack pointer because we're moving DOWN in memory towards the bottom.
@@ -201,3 +254,10 @@ class CPU:
                 else:
                     raise Exception(
                         f"Unsupported instruction: {instruction_register}")
+
+                # If a program sets the program counter, we want to have a mask set up for that.
+                set_pc = (instruction_register >> 4) & 0b00000001
+
+                if set_pc == 0:
+                    num_args = instruction_register >> 6
+                    self.pc += num_args + 1
