@@ -123,15 +123,15 @@ class CPU:
         elif op == CMP:
             if self.reg[reg_a] > self.reg[reg_b]:
                 self.fl = 0b00000010
-                print("current flag: ", self.fl)
+                # print("current flag: ", self.fl)
 
             elif self.reg[reg_a] < self.reg[reg_b]:
                 self.fl = 0b00000100
-                print("current flag: ", self.fl)
+                # print("current flag: ", self.fl)
 
             else:
                 self.fl = 0b00000001
-                print("current flag: ", self.fl)
+                # print("current flag: ", self.fl)
 
         elif op == DEC:
             self.reg[reg_a] -= 1
@@ -218,6 +218,7 @@ class CPU:
 
         # We use bitwise masking to grab only the bit we want - the Equals flag.
         equals = (self.fl >> 7) & 0b00000001
+        print("JEQ Equals value: ", equals)
 
         # If that flag is active, it means we want to jump to the location indicated on that register.
         if equals == 1:
@@ -229,6 +230,7 @@ class CPU:
     def jne_op(self, operand_a, operand_b):
         # We use bitwise masking to grab only the bit we want - the Equals flag.
         equals = (self.fl >> 7) & 0b00000001
+        print("JNE Equals value: ", equals)
 
         # If that flag is inactive, it means we want to jump to the location indicated on the next register.
         if equals == 0:
