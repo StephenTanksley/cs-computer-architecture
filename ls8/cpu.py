@@ -3,6 +3,8 @@ import os
 import sys
 
 # Run method operations. Third bit from the left is a 0, so this is handled by the main run method.
+CALL = 0b01010000
+RET = 0b00010001
 HLT = 0b00000001
 IRET = 0b00010011   # Needs implementation
 JMP = 0b01010100   # Needs implementation
@@ -57,6 +59,13 @@ class CPU:
         # self.reg[stack_pointer]
         self.stack_pointer = 7
 
+        # 00000LGE - compare operators and set flags accordingly.
+        #   reg_a > reg_b ? G = 1
+        #   reg_a < reg_b ? L = 1
+        #   reg_a == reg_b ? E = 1
+
+        self.fl = 0b00000000
+
         # This sets the register at self.reg[7] to 243. We can now say self.reg[]
         self.reg[self.stack_pointer] = 243
 
@@ -64,15 +73,16 @@ class CPU:
 
         self.branch_table = {
             HLT:  self.halt_op,
-            # "IRET": self.interrupt_return_op,  # Needs implementation
-            # "JMP":  self.jump_op,  # Needs implementation
-            # "JNE":  self.jne_op,  # Needs implementation
+
+            # IRET: self.interrupt_return_op,  # Needs implementation
+            # JMP:  self.jump_op,  # Needs implementation
+            # JNE:  self.jne_op,  # Needs implementation
             LDI:  self.ldi_op,
-            # "POP":  self.pop_op,  # Needs implementation
-            # "PRA":  self.pra_op,  # Needs implementation
+            POP:  self.pop_op,  # Needs implementation
+            # PRA:  self.pra_op,  # Needs implementation
             PRN:  self.print_op,
-            # "PUSH": self.push_op,  # Needs implementation
-            # "ST":   self.store_op,  # Needs implementation
+            PUSH: self.push_op,  # Needs implementation
+            # ST:   self.store_op,  # Needs implementation
         }
 
     """Load will parse through a program that we've written and will add those instructions line by line in to the RAM at an address indicated by our address variable."""
@@ -187,12 +197,22 @@ class CPU:
 
     # Operation methods - Basically the op code will look up a value from the branch table and will be returned a function.
 
+    def call_op(self, operand_a, operand_b):
+        self.reg[self.stack_pointer] -= 1
+
+        # Writing the return address at the location in memory of the stack pointer.
+        self.ram_write(operand_b, self.reg[self.stack_pointer])
+
+        # change the PC to the address in the provided register.
+        self.pc = self.reg[operand_a]
+
     def halt_op(self, operand_a, operand_b):
         # Exits execution immediately.
         self.running = False
 
     def print_op(self, operand_a, operand_b):
         print(self.reg[operand_a])
+        print(self.reg)
 
     def ldi_op(self, operand_a, operand_b):
         self.reg[operand_a] = operand_b
@@ -207,6 +227,10 @@ class CPU:
         self.reg[self.stack_pointer] += 1
 
     # Here's the run function which basically powers the whole shebang. The Run method is the master controller. It decides what needs to happen and in which method.
+
+    # Comparison flag setting
+
+    def comp_op(self, operand_a, operand_b):
 
     def run(self):
         self.running = True
