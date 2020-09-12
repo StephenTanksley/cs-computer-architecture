@@ -4,23 +4,23 @@ import sys
 
 # Run method operations. Third bit from the left is a 0, so this is handled by the main run method.
 CALL = 0b01010000
-RET = 0b00010001
 HLT = 0b00000001
 IRET = 0b00010011   # Needs implementation
-JMP = 0b01010100   # Needs implementation
+JMP = 0b01010100
 JNE = 0b01010110   # Needs implementation
 LDI = 0b10000010
-POP = 0b01000110   # Needs implementation
+POP = 0b01000110
 PRA = 0b01001000   # Needs implementation
 PRN = 0b01000111
-PUSH = 0b01000101   # Needs implementation
+PUSH = 0b01000101
+RET = 0b00010001
 ST = 0b10000100   # Needs implementation
 
 
 # ALU operations. If the third bit from the left is a 1, we know we have an ALU operation.
 ADD = 0b10100000
 AND = 0b10101000
-CMP = 0b10100111   # Needs implementation
+CMP = 0b10100111
 DEC = 0b01100110
 DIV = 0b10100011
 INC = 0b01100101
@@ -73,9 +73,8 @@ class CPU:
 
         self.branch_table = {
             HLT:  self.halt_op,
-
             # IRET: self.interrupt_return_op,  # Needs implementation
-            # JMP:  self.jump_op,  # Needs implementation
+            JMP:  self.jump_op,  # Needs implementation
             # JNE:  self.jne_op,  # Needs implementation
             LDI:  self.ldi_op,
             POP:  self.pop_op,  # Needs implementation
@@ -124,6 +123,21 @@ class CPU:
 
         elif op == AND:
             self.reg[reg_a] &= self.reg[reg_b]
+
+        elif op == CMP:
+            # We take register a and register b and compare values.
+
+            # 00000LGE - compare operators and set flags accordingly.
+            #   reg_a > reg_b ? G = 1
+            #   reg_a < reg_b ? L = 1
+            #   reg_a == reg_b ? E = 1
+
+            if self.reg[reg_a] > self.reg[reg_b]:
+                self.fl = 0b00000010
+            elif self.reg[reg_a] < self.reg[reg_b]:
+                self.fl = 0b00000100
+            else:
+                self.fl = 0b00000001
 
         elif op == DEC:
             self.reg[reg_a] -= 1
@@ -206,6 +220,14 @@ class CPU:
         # change the PC to the address in the provided register.
         self.pc = self.reg[operand_a]
 
+    def jump_op(self, operand_a):
+        self.pc = self.reg[operand_a]
+
+    def ret_op(self, operand_a, operand_b):
+        # Grab value from the top of the stack and use that to set the PC.
+        self.pc = self.ram_read(self.reg[self.stack_pointer])
+        self.reg[self.stack_pointer] += 1
+
     def halt_op(self, operand_a, operand_b):
         # Exits execution immediately.
         self.running = False
@@ -230,7 +252,7 @@ class CPU:
 
     # Comparison flag setting
 
-    def comp_op(self, operand_a, operand_b):
+    # def comp_op(self, operand_a, operand_b):
 
     def run(self):
         self.running = True
