@@ -6,10 +6,10 @@ import sys
 CALL = 0b01010000
 HLT = 0b00000001
 IRET = 0b00010011   # Needs implementation
-JEQ = 0b01010101
+JEQ = 0b01010101   # 85
 JMP = 0b01010100
 JNE = 0b01010110   # Needs implementation
-LDI = 0b10000010
+LDI = 0b10000010   # 130
 POP = 0b01000110
 PRA = 0b01001000   # Needs implementation
 PRN = 0b01000111
@@ -223,7 +223,9 @@ class CPU:
         # If that flag is active, it means we want to jump to the location indicated on that register.
         if equals == 1:
             # We use our self.jump_op method to do that.
-            self.jump_op(operand_a)
+            self.jump_op(operand_a, operand_b)
+        else:
+            self.pc += 2
 
     def jne_op(self, operand_a, operand_b):
         # We use bitwise masking to grab only the bit we want - the Equals flag.
@@ -232,9 +234,9 @@ class CPU:
         # If that flag is inactive, it means we want to jump to the location indicated on the next register.
         if equals == 0:
             # We use our self.jump_op method to do that.
-            self.jump_op(operand_a)
+            self.jump_op(operand_a, operand_b)
 
-    def jump_op(self, operand_a):
+    def jump_op(self, operand_a, operand_b):
         # change the program counter to move to a different instruction.
         self.pc = self.reg[operand_a]
 
@@ -301,3 +303,4 @@ class CPU:
             if increment_pc == 0:
                 num_args = instruction_register >> 6
                 self.pc += (num_args + 1)
+                print("Current program counter: ", self.pc)
