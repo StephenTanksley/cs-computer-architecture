@@ -6,6 +6,7 @@ import sys
 CALL = 0b01010000
 HLT = 0b00000001
 IRET = 0b00010011   # Needs implementation
+JEQ = 0b01010101
 JMP = 0b01010100
 JNE = 0b01010110   # Needs implementation
 LDI = 0b10000010
@@ -74,6 +75,7 @@ class CPU:
         self.branch_table = {
             HLT:  self.halt_op,
             # IRET: self.interrupt_return_op,  # Needs implementation
+            JEQ: self.jeq_op,
             JMP:  self.jump_op,  # Needs implementation
             # JNE:  self.jne_op,  # Needs implementation
             LDI:  self.ldi_op,
@@ -134,10 +136,14 @@ class CPU:
 
             if self.reg[reg_a] > self.reg[reg_b]:
                 self.fl = 0b00000010
+                print("register a is larger than register b")
             elif self.reg[reg_a] < self.reg[reg_b]:
                 self.fl = 0b00000100
+                print("register b is larger than register a")
+
             else:
                 self.fl = 0b00000001
+                print("register a and register b are equal")
 
         elif op == DEC:
             self.reg[reg_a] -= 1
@@ -219,6 +225,24 @@ class CPU:
 
         # change the PC to the address in the provided register.
         self.pc = self.reg[operand_a]
+
+    def jeq_op(self, operand_a, operand_b):
+        # We use bitwise masking to grab only the bit we want - the Equals flag.
+        equals = (self.fl >> 7) & 0b00000001
+
+        # If that flag is active, it means we want to jump to the location indicated on that register.
+        if equals == 1:
+            # We use our self.jump_op method to do that.
+            self.jump_op(operand_a)
+
+    def jne_op(self, operand_a, operand_b):
+        # We use bitwise masking to grab only the bit we want - the Equals flag.
+        equals = (self.fl >> 7) & 0b00000001
+
+        # If that flag is inactive, it means we want to jump to the location indicated on the next register.
+        if equals == 0:
+            # We use our self.jump_op method to do that.
+            self.jump_op(operand_a)
 
     def jump_op(self, operand_a):
         self.pc = self.reg[operand_a]
