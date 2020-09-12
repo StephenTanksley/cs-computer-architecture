@@ -121,23 +121,17 @@ class CPU:
             self.reg[reg_a] &= self.reg[reg_b]
 
         elif op == CMP:
-            # We take register a and register b and compare values.
-
-            #   self.fl = 0b00000LGE - compare operators and set flags accordingly.
-            #   reg_a > reg_b ? G = 1
-            #   reg_a < reg_b ? L = 1
-            #   reg_a == reg_b ? E = 1
-
             if self.reg[reg_a] > self.reg[reg_b]:
                 self.fl = 0b00000010
-                print("register a is larger than register b")
+                print("current flag: ", self.fl)
+
             elif self.reg[reg_a] < self.reg[reg_b]:
                 self.fl = 0b00000100
-                print("register b is larger than register a")
+                print("current flag: ", self.fl)
 
             else:
                 self.fl = 0b00000001
-                print("register a and register b are equal")
+                print("current flag: ", self.fl)
 
         elif op == DEC:
             self.reg[reg_a] -= 1
@@ -221,6 +215,8 @@ class CPU:
         self.pc = self.reg[operand_a]
 
     def jeq_op(self, operand_a, operand_b):
+        # We're bringing in the next location in the
+
         # We use bitwise masking to grab only the bit we want - the Equals flag.
         equals = (self.fl >> 7) & 0b00000001
 
