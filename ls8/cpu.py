@@ -228,7 +228,6 @@ class CPU:
         if equals == 1:
             # We use our self.jump_op method to do that.
             self.jump_op(operand_a)
-            self.trace()
 
     def jne_op(self, operand_a, operand_b):
         # We use bitwise masking to grab only the bit we want - the Equals flag.
@@ -253,8 +252,7 @@ class CPU:
         self.running = False
 
     def print_op(self, operand_a, operand_b):
-        print(self.reg[operand_a])
-        print(self.reg)
+        print(f"Value at register location {operand_a}: {self.reg[operand_a]}")
 
     def ldi_op(self, operand_a, operand_b):
         self.reg[operand_a] = operand_b
