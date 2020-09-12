@@ -102,7 +102,7 @@ class CPU:
                         # When we cast to int, we can specify a number base. In this case, we're specifying binary.
                         i = int(i[:8], 2)
                         program.append(i)
-                print(program)
+                # print(program)
 
             for instruction in program:
                 self.ram[address] = instruction
@@ -176,7 +176,6 @@ class CPU:
 
     def ram_read(self, mar):
         # The mar holds the memory address we're reading from or writing to.
-        print(self.ram[mar])
         return self.ram[mar]
 
     def ram_write(self, mar, mdr):
@@ -235,6 +234,8 @@ class CPU:
         if equals == 0:
             # We use our self.jump_op method to do that.
             self.jump_op(operand_a, operand_b)
+        else:
+            self.pc += 2
 
     def jump_op(self, operand_a, operand_b):
         # change the program counter to move to a different instruction.
@@ -303,4 +304,5 @@ class CPU:
             if increment_pc == 0:
                 num_args = instruction_register >> 6
                 self.pc += (num_args + 1)
-                print("Current program counter: ", self.pc)
+                # print("Current program counter: ", self.pc)
+            print(self.reg)
