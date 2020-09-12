@@ -39,7 +39,6 @@ class CPU:
     """Main CPU class."""
 
     def __init__(self):
-        """Construct a new CPU."""
 
         # general purpose registers: They store information we're currently working with.
         self.reg = [0] * 8
@@ -60,11 +59,6 @@ class CPU:
         # self.reg[stack_pointer]
         self.stack_pointer = 7
 
-        # 00000LGE - compare operators and set flags accordingly.
-        #   reg_a > reg_b ? G = 1
-        #   reg_a < reg_b ? L = 1
-        #   reg_a == reg_b ? E = 1
-
         self.fl = 0b00000000
 
         # This sets the register at self.reg[7] to 243. We can now say self.reg[]
@@ -76,8 +70,8 @@ class CPU:
             HLT:  self.halt_op,
             # IRET: self.interrupt_return_op,  # Needs implementation
             JEQ: self.jeq_op,
-            JMP:  self.jump_op,  # Needs implementation
-            # JNE:  self.jne_op,  # Needs implementation
+            JMP:  self.jump_op,
+            JNE:  self.jne_op,
             LDI:  self.ldi_op,
             POP:  self.pop_op,  # Needs implementation
             # PRA:  self.pra_op,  # Needs implementation
@@ -129,7 +123,7 @@ class CPU:
         elif op == CMP:
             # We take register a and register b and compare values.
 
-            # 00000LGE - compare operators and set flags accordingly.
+            #   self.fl = 0b00000LGE - compare operators and set flags accordingly.
             #   reg_a > reg_b ? G = 1
             #   reg_a < reg_b ? L = 1
             #   reg_a == reg_b ? E = 1
@@ -234,6 +228,7 @@ class CPU:
         if equals == 1:
             # We use our self.jump_op method to do that.
             self.jump_op(operand_a)
+            self.trace()
 
     def jne_op(self, operand_a, operand_b):
         # We use bitwise masking to grab only the bit we want - the Equals flag.
@@ -245,6 +240,7 @@ class CPU:
             self.jump_op(operand_a)
 
     def jump_op(self, operand_a):
+        # change the program counter to move to a different instruction.
         self.pc = self.reg[operand_a]
 
     def ret_op(self, operand_a, operand_b):
