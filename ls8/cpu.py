@@ -67,6 +67,7 @@ class CPU:
         self.running = False
 
         self.branch_table = {
+            CALL: self.call_op,
             HLT:  self.halt_op,
             # IRET: self.interrupt_return_op,  # Needs implementation
             JEQ: self.jeq_op,
@@ -217,7 +218,7 @@ class CPU:
         # We're bringing in the next location in the
 
         # We use bitwise masking to grab only the bit we want - the Equals flag.
-        equals = (self.fl >> 7) & 0b00000001
+        equals = self.fl & 0b00000001
         print("JEQ Equals value: ", equals)
 
         # If that flag is active, it means we want to jump to the location indicated on that register.
@@ -229,7 +230,7 @@ class CPU:
 
     def jne_op(self, operand_a, operand_b):
         # We use bitwise masking to grab only the bit we want - the Equals flag.
-        equals = (self.fl >> 7) & 0b00000001
+        equals = self.fl & 0b00000001
         print("JNE Equals value: ", equals)
 
         # If that flag is inactive, it means we want to jump to the location indicated on the next register.
