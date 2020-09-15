@@ -70,7 +70,7 @@ class CPU:
             CALL: self.call_op,
             HLT:  self.halt_op,
             # IRET: self.interrupt_return_op,  # Needs implementation
-            JEQ: self.jeq_op,
+            JEQ:  self.jeq_op,
             JMP:  self.jump_op,
             JNE:  self.jne_op,
             LDI:  self.ldi_op,
@@ -219,7 +219,7 @@ class CPU:
 
         # We use bitwise masking to grab only the bit we want - the Equals flag.
         equals = self.fl & 0b00000001
-        print("JEQ Equals value: ", equals)
+        # print("JEQ Equals value: ", equals)
 
         # If that flag is active, it means we want to jump to the location indicated on that register.
         if equals == 1:
@@ -231,7 +231,7 @@ class CPU:
     def jne_op(self, operand_a, operand_b):
         # We use bitwise masking to grab only the bit we want - the Equals flag.
         equals = self.fl & 0b00000001
-        print("JNE Equals value: ", equals)
+        # print("JNE Equals value: ", equals)
 
         # If that flag is inactive, it means we want to jump to the location indicated on the next register.
         if equals == 0:
@@ -240,22 +240,25 @@ class CPU:
         else:
             self.pc += 2
 
+    # change the program counter to move to a different instruction.
     def jump_op(self, operand_a, operand_b):
-        # change the program counter to move to a different instruction.
         self.pc = self.reg[operand_a]
+        # print("current program counter: ", self.pc)
 
+    # Grab value from the top of the stack and use that to set the PC.
     def ret_op(self, operand_a, operand_b):
-        # Grab value from the top of the stack and use that to set the PC.
         self.pc = self.ram_read(self.reg[self.stack_pointer])
         self.reg[self.stack_pointer] += 1
 
+    # Exits execution immediately.
     def halt_op(self, operand_a, operand_b):
-        # Exits execution immediately.
         self.running = False
 
+    # Print the value at the provided register.
     def print_op(self, operand_a, operand_b):
         print(f"Value at register location {operand_a}: {self.reg[operand_a]}")
 
+    # Load data
     def ldi_op(self, operand_a, operand_b):
         self.reg[operand_a] = operand_b
 
@@ -271,8 +274,6 @@ class CPU:
     # Here's the run function which basically powers the whole shebang. The Run method is the master controller. It decides what needs to happen and in which method.
 
     # Comparison flag setting
-
-    # def comp_op(self, operand_a, operand_b):
 
     def run(self):
         self.running = True
